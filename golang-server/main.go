@@ -7,10 +7,6 @@ import (
 )
 
 func helloFunction(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/hello" {
-		http.Error(w, "404 not found", http.StatusNotFound)
-		return
-	}
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -19,29 +15,26 @@ func helloFunction(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginFunction(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/login" {
-		http.Error(w, "404 not found", http.StatusNotFound)
-		return
-	}
-	if r.Method != "POST" {
+	switch r.Method {
+	case "GET":
+		http.ServeFile(w, r, "login.html") // Đảm bảo file này tồn tại cùng thư mục chạy code
+	case "POST":
+		if r.FormValue("username") == "admin" && r.FormValue("password") == "admin" {
+			fmt.Fprintf(w, "Login successful!")	
+		} else {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		}
+	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	if r.FormValue("username") == "admin" || r.FormValue("password") == "admin" {
-		fmt.Fprintf(w, "Login successful!")
-	} else {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		return
 	}
 }
 
-func main(){
-	fileServer := http.FileServer(http.Dir("./static"))
-	http.Handle("/", fileServer)
+func main() {
 	http.HandleFunc("/hello", helloFunction)
-	http.HandleFunc("login", loginFunction)
+	http.HandleFunc("/login", loginFunction)
+	http.Handle("/", http.FileServer(http.Dir("./static"))) // Đăng ký route này SAU cùng
 
-	fmt.Printf("Starting server at port 8080\n")
+	fmt.Printf("Starting server at port 8000\n")
 	if err := http.ListenAndServe(":8000", nil); err != nil {
 		log.Fatal(err)
 	}
