@@ -2,5 +2,5 @@ package main
 
 
 func main(){
-	printHello()
+	printOneToHundred()
 }
